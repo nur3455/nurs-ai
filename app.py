@@ -1,4 +1,4 @@
-#python -m streamlit run app.py
+
 import streamlit as st
 from google import genai
 
@@ -14,7 +14,11 @@ st.set_page_config(
 
 st.title("🤖 Nur's AI Assistant")
 st.caption("Your personal AI assistant")
-st.write("Hello! 👋 Welcome to Nur's AI Assistant. How can I help you today?")
+
+st.write(
+    "Hello! 👋 Welcome to Nur's AI Assistant. "
+    "How can I help you today?"
+)
 
 
 # =========================
@@ -28,7 +32,7 @@ try:
 except Exception:
     st.error(
         "API key not found. Please check your "
-        ".streamlit/secrets.toml file."
+        "Streamlit Secrets settings."
     )
     st.stop()
 
@@ -36,9 +40,6 @@ except Exception:
 # =========================
 # AVAILABLE MODELS
 # =========================
-
-# If one model fails, the app will try the next model.
-# Make sure these model IDs are available to your API project.
 
 MODELS = [
     "gemini-3.5-flash-lite",
@@ -54,6 +55,7 @@ if "messages" not in st.session_state:
 
 
 # Display previous messages
+
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -68,7 +70,8 @@ prompt = st.chat_input("Message Nur's AI Assistant...")
 
 if prompt:
 
-    # Save the user message
+    # Save user message
+
     st.session_state.messages.append({
         "role": "user",
         "content": prompt
@@ -77,10 +80,13 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Build the conversation history
+
+    # Build conversation history
+
     conversation = []
 
     for message in st.session_state.messages:
+
         role = (
             "User"
             if message["role"] == "user"
@@ -93,8 +99,9 @@ if prompt:
 
     chat_history = "\n".join(conversation)
 
+
     # =========================
-    # AI RESPONSE WITH FALLBACK
+    # AI RESPONSE
     # =========================
 
     with st.chat_message("assistant"):
@@ -102,84 +109,64 @@ if prompt:
         answer = None
         errors = []
 
-        status_box = st.status(
-            "Starting AI response...",
-            expanded=True
-        )
-
         try:
-            for model_name in MODELS:
 
-                status_box.write(
-                    f"Trying model: {model_name}"
-                )
+            with st.spinner("Thinking..."):
 
-                try:
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=chat_history,
-                        config={
-                            "http_options": {
-                                "timeout": 30000
+                for model_name in MODELS:
+
+                    try:
+
+                        response = client.models.generate_content(
+                            model=model_name,
+                            contents=chat_history,
+                            config={
+                                "http_options": {
+                                    "timeout": 30000
+                                }
                             }
-                        }
-                    )
-
-                    answer = response.text
-
-                    if answer:
-                        status_box.update(
-                            label=f"Success: {model_name}",
-                            state="complete",
-                            expanded=False
                         )
-                        break
 
-                    errors.append(
-                        f"{model_name}: The model returned an empty response."
-                    )
+                        answer = response.text
 
-                except Exception as e:
-                    error_message = str(e)
+                        if answer:
+                            break
 
-                    errors.append(
-                        f"{model_name}: {error_message}"
-                    )
+                        errors.append(
+                            f"{model_name}: Empty response"
+                        )
 
-                    status_box.write(
-                        f"Model failed: {model_name}"
-                    )
+                    except Exception as e:
 
-        finally:
-            if not answer:
-                status_box.update(
-                    label="AI response failed",
-                    state="error",
-                    expanded=True
+                        errors.append(
+                            f"{model_name}: {str(e)}"
+                        )
+
+
+            if answer:
+
+                st.markdown(answer)
+
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": answer
+                })
+
+            else:
+
+                st.error(
+                    "Sorry, I couldn't generate a response. "
+                    "Please try again later."
                 )
 
-        if answer:
+                with st.expander("Technical Error Details"):
+                    for error in errors:
+                        st.code(error)
 
-            st.markdown(answer)
+        except Exception as e:
 
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": answer
-            })
+            st.error("An unexpected error occurred.")
 
-        else:
-
-            st.error(
-                "Sorry, the AI could not generate a response. "
-                "Check the error details below."
-            )
-
-            with st.expander(
-                "Technical Error Details",
-                expanded=True
-            ):
-                for error in errors:
-                    st.code(error)
 
 # =========================
 # SIDEBAR
@@ -196,7 +183,11 @@ with st.sidebar:
 
     st.divider()
 
-    if st.button("🗑️ Clear Chat", use_container_width=True):
+    if st.button(
+        "🗑️ Clear Chat",
+        use_container_width=True
+    ):
+
         st.session_state.messages = []
         st.rerun()
 
