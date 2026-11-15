@@ -8,11 +8,9 @@ from io import BytesIO
 from PIL import Image
 import uuid
 
-
 # =====================================
 # PAGE CONFIG
 # =====================================
-
 st.set_page_config(
     page_title="Nur's AI Assistant",
     page_icon="🤖",
@@ -26,14 +24,11 @@ MAX_IMAGE_SIDE = 1600
 IMAGE_JPEG_QUALITY = 85
 STORAGE_BUCKET = "chat-images"
 
-
 # =====================================
-# ORIGINAL PURPLE-BLUE DESIGN
+# ORIGINAL PURPLE-BLUE THEME
 # =====================================
-
 st.markdown("""
 <style>
-
 .stApp {
     background: linear-gradient(
         135deg,
@@ -133,6 +128,8 @@ section[data-testid="stSidebar"] * {
 .stTextInput input,
 .stTextArea textarea {
     border-radius: 12px;
+    background: #ffffff;
+    color: #172044;
 }
 
 div[data-testid="stChatMessage"] {
@@ -155,29 +152,24 @@ hr {
     color: #7782a7;
     font-size: 13px;
 }
-
 </style>
 """, unsafe_allow_html=True)
-
 
 # =====================================
 # SECRETS AND CONNECTIONS
 # =====================================
-
 try:
     GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
 
+    # Use the server-side Secret key first.
     SUPABASE_KEY = (
         st.secrets.get("SUPABASE_SECRET_KEY")
         or st.secrets.get("SUPABASE_KEY")
     )
 
     if not SUPABASE_KEY:
-        st.error(
-            "Supabase key not found. "
-            "Please check your Streamlit Secrets."
-        )
+        st.error("Supabase key is missing. Check Streamlit Secrets.")
         st.stop()
 
     supabase = create_client(
@@ -193,13 +185,10 @@ except Exception as e:
     st.error(f"Connection error: {e}")
     st.stop()
 
-
 # =====================================
 # GOOGLE LOGIN
 # =====================================
-
 if not st.user.is_logged_in:
-
     st.markdown("""
     <div class="hero">
         <h1>🤖 Welcome to <span>Nur's AI</span></h1>
@@ -211,48 +200,37 @@ if not st.user.is_logged_in:
     """, unsafe_allow_html=True)
 
     st.subheader("Welcome!")
-
     st.write(
         "Continue with your Google account "
         "to use Nur's AI Assistant."
     )
 
-    if st.button(
-        "🔐 Login with Google",
-        use_container_width=True
-    ):
+    if st.button("🔐 Login with Google", use_container_width=True):
         st.login("google")
 
     st.stop()
 
-
 # =====================================
 # USER INFORMATION
 # =====================================
-
 user_id = st.user.get("sub")
 user_email = st.user.get("email", "User")
 
 if not user_id:
-    st.error("Google user ID not found. Please sign in again.")
+    st.error("Google user ID was not found. Please log in again.")
     st.stop()
-
 
 # =====================================
 # SESSION STATE
 # =====================================
-
 if "current_chat_id" not in st.session_state:
     st.session_state.current_chat_id = None
-
 
 # =====================================
 # DATABASE HELPERS
 # =====================================
-
 @st.cache_data(ttl=20, show_spinner=False)
 def get_chats(current_user_id):
-
     result = (
         supabase.table("chats")
         .select("id, title, updated_at")
@@ -261,13 +239,11 @@ def get_chats(current_user_id):
         .limit(50)
         .execute()
     )
-
     return result.data or []
 
 
 @st.cache_data(ttl=15, show_spinner=False)
 def get_messages(current_user_id, chat_id):
-
     result = (
         supabase.table("chat_messages")
         .select("id, role, content, image_path, created_at")
@@ -276,12 +252,10 @@ def get_messages(current_user_id, chat_id):
         .order("created_at")
         .execute()
     )
-
     return result.data or []
 
 
 def create_new_chat(title="New Chat"):
-
     now = datetime.now(timezone.utc).isoformat()
 
     result = (
@@ -301,7 +275,6 @@ def create_new_chat(title="New Chat"):
 
 
 def save_message(chat_id, role, content, image_path=None):
-
     row = {
         "user_id": user_id,
         "chat_id": chat_id,
@@ -314,12 +287,10 @@ def save_message(chat_id, role, content, image_path=None):
         row["image_path"] = image_path
 
     supabase.table("chat_messages").insert(row).execute()
-
     get_messages.clear()
 
 
 def update_chat_time(chat_id):
-
     supabase.table("chats").update({
         "updated_at": datetime.now(timezone.utc).isoformat()
     }).eq(
@@ -332,11 +303,9 @@ def update_chat_time(chat_id):
 
 
 # =====================================
-# IMAGE HELPERS
+# IMAGE HELPERS - PRIVATE STORAGE
 # =====================================
-
 def prepare_image(uploaded_image):
-
     uploaded_image.seek(0)
 
     image = Image.open(uploaded_image)
@@ -358,7 +327,6 @@ def prepare_image(uploaded_image):
 
 
 def upload_chat_image(chat_id, image_bytes):
-
     image_path = (
         f"{user_id}/{chat_id}/{uuid.uuid4().hex}.jpg"
     )
@@ -376,11 +344,9 @@ def upload_chat_image(chat_id, image_bytes):
 
 
 def get_chat_image_url(image_path):
-
-    result = (
-        supabase.storage
-        .from_(STORAGE_BUCKET)
-        .create_signed_url(image_path, 3600)
+    result = supabase.storage.from_(STORAGE_BUCKET).create_signed_url(
+        image_path,
+        3600
     )
 
     return (
@@ -392,9 +358,7 @@ def get_chat_image_url(image_path):
 # =====================================
 # GEMINI PROCESSING
 # =====================================
-
 def process_request(prompt, image_file=None):
-
     prompt = (prompt or "").strip()
 
     if not prompt and image_file is not None:
@@ -407,9 +371,7 @@ def process_request(prompt, image_file=None):
     chat_id = st.session_state.current_chat_id
 
     if not chat_id:
-
         chat_id = create_new_chat(prompt[:45])
-
         st.session_state.current_chat_id = chat_id
 
     if not chat_id:
@@ -417,13 +379,10 @@ def process_request(prompt, image_file=None):
         return
 
     try:
-
         previous_messages = get_messages(user_id, chat_id)
-
         contents = []
 
         for msg in previous_messages[-MAX_HISTORY_MESSAGES:]:
-
             role = (
                 "model"
                 if msg["role"] == "assistant"
@@ -432,9 +391,9 @@ def process_request(prompt, image_file=None):
 
             contents.append({
                 "role": role,
-                "parts": [
-                    {"text": msg.get("content") or ""}
-                ]
+                "parts": [{
+                    "text": msg.get("content") or ""
+                }]
             })
 
         current_parts = [
@@ -445,7 +404,6 @@ def process_request(prompt, image_file=None):
         image_bytes = None
 
         if image_file is not None:
-
             image_bytes = prepare_image(image_file)
 
             current_parts.append(
@@ -455,11 +413,13 @@ def process_request(prompt, image_file=None):
                 )
             )
 
+            # Upload image to private Supabase Storage.
             image_path = upload_chat_image(
                 chat_id,
                 image_bytes
             )
 
+        # Save user message and image path.
         save_message(
             chat_id,
             "user",
@@ -472,362 +432,251 @@ def process_request(prompt, image_file=None):
             "parts": current_parts
         })
 
-        with st.chat_message("user", avatar="👤"):
+        update_chat_time(chat_id)
 
+        with st.chat_message("user", avatar="👤"):
             st.markdown(prompt)
 
             if image_bytes is not None:
                 st.image(image_bytes, width=280)
 
         with st.chat_message("assistant", avatar="🤖"):
-
             stream = gemini_client.models.generate_content_stream(
                 model=MODEL,
                 contents=contents
             )
 
             def text_chunks():
-
                 for chunk in stream:
-
                     if getattr(chunk, "text", None):
                         yield chunk.text
 
             answer = st.write_stream(text_chunks())
 
         if answer:
-
             save_message(
                 chat_id,
                 "assistant",
                 answer
             )
-
             update_chat_time(chat_id)
 
     except Exception as e:
-
         st.error(f"Request error: {e}")
 
 
 # =====================================
 # SIDEBAR
 # =====================================
-
 with st.sidebar:
-
-    st.markdown("## Nur's AI Assistant")
-
-    st.caption(f"Signed in as {user_email}")
-
+    st.markdown("## 🤖 Nur's AI Assistant")
+    st.caption("Your personal AI companion")
     st.divider()
 
-    if st.button(
-        "➕ New Chat",
-        use_container_width=True
-    ):
+    st.markdown(f"👤 **{user_email}**")
 
+    if st.button("＋ New Chat", use_container_width=True):
         st.session_state.current_chat_id = None
         st.rerun()
 
     st.divider()
-
-    st.markdown("### Chat History")
+    st.markdown("### 💬 Chat History")
 
     try:
-
         chat_list = get_chats(user_id)
 
-        if chat_list:
+        if not chat_list:
+            st.caption("No chats yet.")
 
-            for chat in chat_list:
+        for chat in chat_list:
+            title = chat.get("title") or "New Chat"
+            chat_id = chat["id"]
 
-                chat_title = chat.get("title") or "New Chat"
-                chat_id = chat["id"]
+            if st.button(
+                f"💬 {title[:28]}",
+                key=f"open_chat_{chat_id}",
+                use_container_width=True
+            ):
+                st.session_state.current_chat_id = chat_id
+                st.rerun()
 
-                is_selected = (
-                    st.session_state.current_chat_id == chat_id
-                )
-
-                button_label = (
-                    f"● {chat_title[:25]}"
-                    if is_selected
-                    else chat_title[:28]
-                )
-
+            if st.session_state.current_chat_id == chat_id:
                 if st.button(
-                    button_label,
-                    key=f"chat_{chat_id}",
-                    use_container_width=True
+                    "🗑️ Delete this chat",
+                    key=f"delete_chat_{chat_id}"
                 ):
+                    # Remove this chat's stored images.
+                    try:
+                        files = supabase.storage.from_(
+                            STORAGE_BUCKET
+                        ).list(f"{user_id}/{chat_id}")
 
-                    st.session_state.current_chat_id = chat_id
+                        if files:
+                            paths = [
+                                f"{user_id}/{chat_id}/{file['name']}"
+                                for file in files
+                                if file.get("name")
+                            ]
+
+                            if paths:
+                                supabase.storage.from_(
+                                    STORAGE_BUCKET
+                                ).remove(paths)
+
+                    except Exception as storage_error:
+                        st.warning(
+                            f"Could not remove stored images: {storage_error}"
+                        )
+
+                    supabase.table("chat_messages").delete().eq(
+                        "user_id", user_id
+                    ).eq(
+                        "chat_id", chat_id
+                    ).execute()
+
+                    supabase.table("chats").delete().eq(
+                        "user_id", user_id
+                    ).eq(
+                        "id", chat_id
+                    ).execute()
+
+                    get_chats.clear()
+                    get_messages.clear()
+                    st.session_state.current_chat_id = None
                     st.rerun()
 
-        else:
-
-            st.caption("No chat history yet.")
-
     except Exception as e:
-
-        st.error(f"Could not load chat history: {e}")
+        st.warning(f"Chat history load error: {e}")
 
     st.divider()
 
-    if st.session_state.current_chat_id:
-
-        if st.button(
-            "🗑️ Delete This Chat",
-            use_container_width=True
-        ):
-
-            try:
-
-                selected_chat = st.session_state.current_chat_id
-
-                supabase.table("chat_messages").delete().eq(
-                    "user_id", user_id
-                ).eq(
-                    "chat_id", selected_chat
-                ).execute()
-
-                supabase.table("chats").delete().eq(
-                    "user_id", user_id
-                ).eq(
-                    "id", selected_chat
-                ).execute()
-
-                get_chats.clear()
-                get_messages.clear()
-
-                st.session_state.current_chat_id = None
-
-                st.success("Chat deleted successfully.")
-
-                st.rerun()
-
-            except Exception as e:
-
-                st.error(f"Could not delete chat: {e}")
-
-    if st.button(
-        "Log Out",
-        use_container_width=True
-    ):
-
+    if st.button("🚪 Logout", use_container_width=True):
         st.logout()
 
 
 # =====================================
-# HOME PAGE
+# MAIN FRONT PAGE
 # =====================================
-
-st.markdown(
-    """
-    <div style="text-align:center; padding:25px 10px 15px 10px;">
-
-        <h1 style="font-size:38px; margin-bottom:5px;">
-            Nur's AI Assistant
-        </h1>
-
-        <p style="font-size:16px; color:#777;">
-            Your intelligent assistant for everyday tasks
-        </p>
-
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-
-if not st.session_state.current_chat_id:
-
-    st.markdown("### What can I help you with today?")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        st.markdown("""
-        <div class="feature-card">
-
-            <div class="feature-icon">💡</div>
-
-            <div class="feature-title">
-                Ask Anything
-            </div>
-
-            <div class="feature-desc">
-                Get answers, explanations and helpful ideas.
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="feature-card">
-
-            <div class="feature-icon">✍️</div>
-
-            <div class="feature-title">
-                Writing Assistant
-            </div>
-
-            <div class="feature-desc">
-                Write, improve and summarize your text.
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-
-        st.markdown("""
-        <div class="feature-card">
-
-            <div class="feature-icon">🖼️</div>
-
-            <div class="feature-title">
-                Image Analysis
-            </div>
-
-            <div class="feature-desc">
-                Upload an image and ask questions about it.
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="feature-card">
-
-            <div class="feature-icon">📚</div>
-
-            <div class="feature-title">
-                Learning Support
-            </div>
-
-            <div class="feature-desc">
-                Understand topics and learn something new.
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    st.info(
-        "Start a conversation by typing a message below."
-    )
-
-else:
-
-    st.markdown("### Your Conversation")
+st.markdown("""
+<div class="hero">
+    <h1>Welcome to <span>Nur's AI</span> 🤖</h1>
+    <p>
+        Ask questions, get answers, upload images
+        and explore your ideas — all in one place.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 
 # =====================================
-# DISPLAY CHAT HISTORY
+# FEATURE CARDS
 # =====================================
+if st.session_state.current_chat_id is None:
+    col1, col2, col3, col4 = st.columns(4)
 
-if st.session_state.current_chat_id:
+    cards = [
+        (col1, "💬", "Smart Chat", "Get intelligent answers."),
+        (col2, "🖼️", "Image Analysis", "Upload an image and ask about it."),
+        (col3, "💡", "Creative Ideas", "Explore new ideas with AI."),
+        (col4, "📚", "Productivity", "Plan, write and learn.")
+    ]
 
-    try:
-
-        messages = get_messages(
-            user_id,
-            st.session_state.current_chat_id
-        )
-
-        for msg in messages:
-
-            role = msg.get("role", "assistant")
-
-            avatar = (
-                "👤"
-                if role == "user"
-                else "🤖"
+    for col, icon, title, description in cards:
+        with col:
+            st.markdown(
+                f'<div class="feature-card">'
+                f'<div class="feature-icon">{icon}</div>'
+                f'<div class="feature-title">{title}</div>'
+                f'<div class="feature-desc">{description}</div>'
+                f'</div>',
+                unsafe_allow_html=True
             )
 
+    st.markdown("### Recent Chats")
+
+    recent_chats = get_chats(user_id)[:4]
+
+    if recent_chats:
+        for chat in recent_chats:
+            if st.button(
+                f"💬 {chat.get('title') or 'New Chat'}",
+                key=f"recent_{chat['id']}",
+                use_container_width=True
+            ):
+                st.session_state.current_chat_id = chat["id"]
+                st.rerun()
+    else:
+        st.caption("Your conversations will appear here.")
+
+
+# =====================================
+# CURRENT CONVERSATION
+# =====================================
+chat_id = st.session_state.current_chat_id
+
+if chat_id:
+    st.markdown("### ✨ Your Conversation")
+
+    try:
+        messages = get_messages(user_id, chat_id)
+
+        for msg in messages:
+            role = msg.get("role", "user")
+            avatar = "🤖" if role == "assistant" else "👤"
+
             with st.chat_message(role, avatar=avatar):
-
-                content = msg.get("content", "")
-
-                if content:
-                    st.markdown(content)
+                st.markdown(msg.get("content") or "")
 
                 image_path = msg.get("image_path")
 
                 if image_path:
-
                     try:
-
-                        image_url = get_chat_image_url(
-                            image_path
-                        )
+                        image_url = get_chat_image_url(image_path)
 
                         if image_url:
-                            st.image(image_url, width=350)
+                            st.image(image_url, width=320)
 
-                        else:
-                            st.warning(
-                                "Could not load this image."
-                            )
-
-                    except Exception:
-
-                        st.warning(
-                            "Could not load this image."
+                    except Exception as image_error:
+                        st.caption(
+                            f"Image could not be displayed: {image_error}"
                         )
 
     except Exception as e:
-
-        st.error(f"Could not load messages: {e}")
+        st.error(f"Could not load conversation: {e}")
 
 
 # =====================================
-# MESSAGE INPUT
+# MESSAGE COMPOSER
 # =====================================
+st.divider()
+st.markdown("### ✉️ Send a message")
 
-st.markdown("---")
+with st.form("message_form", clear_on_submit=True):
+    prompt_col, image_col = st.columns([4, 2])
 
-with st.form(
-    "message_form",
-    clear_on_submit=True
-):
+    with prompt_col:
+        prompt = st.text_input(
+            "Message",
+            placeholder="Message Nur's AI..."
+        )
 
-    uploaded_image = st.file_uploader(
-        "Upload an image (optional)",
-        type=["png", "jpg", "jpeg", "webp"],
-        key="chat_image_uploader"
-    )
+    with image_col:
+        uploaded_image = st.file_uploader(
+            "Upload image (optional)",
+            type=["png", "jpg", "jpeg", "webp"]
+        )
 
-    prompt = st.text_area(
-        "Message Nur's AI Assistant",
-        placeholder="Ask me anything...",
-        height=100,
-        key="chat_prompt"
-    )
-
-    send_button = st.form_submit_button(
-        "Send Message",
+    send = st.form_submit_button(
+        "➤ Send",
         use_container_width=True
     )
 
-
-# Process the submitted message outside the form.
-if send_button:
-
+if send:
     if prompt.strip() or uploaded_image is not None:
-
         process_request(
             prompt,
-            uploaded_image
+            image_file=uploaded_image
         )
-
         st.rerun()
-
     else:
-
-        st.warning(
-            "Please enter a message or upload an image."
-        )
+        st.warning("Please enter a message or upload an image.")
