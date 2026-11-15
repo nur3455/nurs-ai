@@ -8,7 +8,6 @@ from gtts import gTTS
 from io import BytesIO
 from PIL import Image
 
-
 # =====================================
 # PAGE CONFIG
 # =====================================
@@ -28,7 +27,6 @@ IMAGE_JPEG_QUALITY = 85
 # Theme preference (Dark Mode is the default)
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
-
 
 # =====================================
 # DARK PREMIUM DESIGN
@@ -126,7 +124,6 @@ hr {
     border-color: #39365e;
 }
 
-
 /* =====================================
    FIXED BOTTOM CHAT BAR
    ===================================== */
@@ -137,27 +134,70 @@ hr {
     right: 2rem;
     bottom: 0.8rem;
     z-index: 999;
-    padding: 10px 12px;
-    border: 1px solid #39365e;
-    border-radius: 18px;
-    background: rgba(20, 20, 42, 0.96);
+    padding: 8px 12px;
+    border: 1px solid #393c83;
+    border-radius: 22px;
+    background: linear-gradient(105deg, rgba(13, 22, 55, 0.98), rgba(17, 22, 62, 0.98));
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.38);
     backdrop-filter: blur(14px);
 }
 
 .st-key-fixed_chat_bar [data-testid="stHorizontalBlock"] {
-    align-items: end;
+    align-items: center;
+    gap: 8px;
 }
 
 .st-key-fixed_chat_bar [data-testid="stPopover"] > button {
-    min-height: 48px;
-    width: 100%;
+    min-height: 42px;
+    width: 42px;
+    padding: 0;
     border-radius: 50%;
-    font-size: 22px;
+    border: 0;
+    background: transparent;
+    color: #e8eaff;
+    font-size: 21px;
+    box-shadow: none;
 }
 
-.st-key-fixed_chat_bar [data-testid="stChatInput"] {
+.st-key-fixed_chat_bar [data-testid="stPopover"] > button:hover {
+    background: rgba(125, 111, 255, 0.18);
+    border: 0;
+}
+
+.st-key-fixed_chat_bar [data-testid="stTextInput"] {
     margin-bottom: 0;
+}
+
+.st-key-fixed_chat_bar [data-testid="stTextInput"] input {
+    min-height: 42px;
+    border: 0 !important;
+    border-radius: 14px;
+    background: transparent !important;
+    color: #f4f2ff !important;
+    box-shadow: none !important;
+    padding-left: 8px;
+}
+
+.st-key-fixed_chat_bar [data-testid="stTextInput"] input::placeholder {
+    color: #b9c2e8;
+}
+
+.st-key-fixed_chat_bar [data-testid="stFormSubmitButton"] button {
+    min-height: 42px;
+    width: 42px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8757ff, #5535e8);
+    color: white;
+    font-size: 20px;
+    box-shadow: 0 3px 12px rgba(105, 75, 255, 0.35);
+}
+
+.st-key-fixed_chat_bar [data-testid="stFormSubmitButton"] button:hover {
+    border: 0;
+    color: white;
+    filter: brightness(1.12);
 }
 
 section[data-testid="stMain"] .block-container {
@@ -167,13 +207,26 @@ section[data-testid="stMain"] .block-container {
 @media (max-width: 900px) {
 
     .st-key-fixed_chat_bar {
-        left: 1rem;
-        right: 1rem;
+        left: 0.65rem;
+        right: 0.65rem;
         bottom: 0.5rem;
+        padding: 7px 8px;
+    }
+
+    .st-key-fixed_chat_bar [data-testid="stHorizontalBlock"] {
+        gap: 4px;
+    }
+
+    .st-key-fixed_chat_bar [data-testid="stPopover"] > button {
+        width: 36px;
+        min-height: 40px;
+    }
+
+    .st-key-fixed_chat_bar [data-testid="stFormSubmitButton"] button {
+        width: 38px;
     }
 
 }
-
 
 /* =====================================
    PRESENTATION-READY HOME DASHBOARD
@@ -301,7 +354,6 @@ section[data-testid="stMain"] .block-container {
     border: 1px solid #393b9b;
     background: radial-gradient(circle at 95% 50%, rgba(107,74,255,.24), transparent 30%), linear-gradient(110deg,#111b4b,#17145a 65%,#202078);
 }
-
 .showcase-ready h3 {
     color: #fff;
     margin: 0 0 9px 0;
@@ -452,9 +504,21 @@ if st.session_state.light_mode:
     }
 
     .st-key-fixed_chat_bar {
-        background: rgba(255,255,255,0.96);
+        background: linear-gradient(105deg, rgba(255,255,255,0.98), rgba(244,246,255,0.98));
         border: 1px solid #dce5ff;
         box-shadow: 0 8px 28px rgba(55, 75, 135, 0.13);
+    }
+
+    .st-key-fixed_chat_bar [data-testid="stTextInput"] input {
+        color: #172b5b !important;
+    }
+
+    .st-key-fixed_chat_bar [data-testid="stTextInput"] input::placeholder {
+        color: #7180a8;
+    }
+
+    .st-key-fixed_chat_bar [data-testid="stPopover"] > button {
+        color: #344b86;
     }
 
     [data-testid="stPopover"] > button,
@@ -564,6 +628,8 @@ except Exception as e:
 
     st.error(f"Connection error: {e}")
     st.stop()
+
+
 # =====================================
 # LOGIN
 # =====================================
@@ -592,9 +658,7 @@ if not st.user.is_logged_in:
         st.login("google")
 
     st.stop()
-
-
-# =====================================
+    # =====================================
 # USER INFORMATION
 # =====================================
 
@@ -982,86 +1046,100 @@ with st.sidebar:
     st.markdown(
         "### 💬 Chat History"
     )
+        # Chat History List
 
-    try:
+    chats = get_chats(user_id)
 
-        chats = get_chats(user_id)
+    if chats:
 
         for chat in chats:
 
-            chat_title = (
-                chat.get("title") or "New Chat"
+            chat_title = chat.get(
+                "title",
+                "New Chat"
             )
-
-            chat_id = chat["id"]
 
             if st.button(
                 f"💬 {chat_title[:28]}",
-                key=f"chat_{chat_id}",
+                key=f"history_{chat['id']}",
                 use_container_width=True
             ):
 
-                st.session_state.current_chat_id = chat_id
+                st.session_state.current_chat_id = chat["id"]
                 st.rerun()
 
-            # Delete Chat
+    else:
 
-            if (
-                st.session_state.current_chat_id == chat_id
-                and st.button(
-                    "🗑️ Delete this chat",
-                    key=f"delete_{chat_id}"
-                )
-            ):
-
-                (
-                    supabase.table("chat_messages")
-                    .delete()
-                    .eq("user_id", user_id)
-                    .eq("chat_id", chat_id)
-                    .execute()
-                )
-
-                (
-                    supabase.table("chats")
-                    .delete()
-                    .eq("user_id", user_id)
-                    .eq("id", chat_id)
-                    .execute()
-                )
-
-                get_chats.clear()
-                st.session_state.current_chat_id = None
-                st.rerun()
-
-    except Exception as e:
-
-        st.warning(
-            f"Chat history load error: {e}"
-        )
+        st.caption("No chat history yet.")
 
     st.divider()
 
-    # Settings
+    # Delete Current Chat
 
-    st.markdown(
-        "### ⚙️ Settings"
-    )
+    if st.session_state.current_chat_id:
 
-    st.toggle(
-        "☀️ Light Mode",
-        key="light_mode",
-        help="Turn on to use the full light theme. Turn off to return to the original dark theme."
-    )
+        if st.button(
+            "🗑️ Delete This Chat",
+            use_container_width=True
+        ):
+
+            try:
+
+                chat_id = st.session_state.current_chat_id
+
+                supabase.table(
+                    "chat_messages"
+                ).delete().eq(
+                    "user_id", user_id
+                ).eq(
+                    "chat_id", chat_id
+                ).execute()
+
+                supabase.table(
+                    "chats"
+                ).delete().eq(
+                    "user_id", user_id
+                ).eq(
+                    "id", chat_id
+                ).execute()
+
+                get_chats.clear()
+                get_messages.clear()
+
+                st.session_state.current_chat_id = None
+
+                st.success("Chat deleted!")
+                st.rerun()
+
+            except Exception as e:
+
+                st.error(f"Delete error: {e}")
+
+    st.divider()
+
+    # Voice Reply Toggle
 
     st.session_state.voice_reply = st.toggle(
         "🔊 AI Voice Reply",
         value=st.session_state.voice_reply
     )
 
-    st.divider()
+    # Theme Toggle
 
-    # Logout
+    if "light_mode" not in st.session_state:
+        st.session_state.light_mode = False
+
+    light_mode = st.toggle(
+        "☀️ Light Mode",
+        value=st.session_state.light_mode
+    )
+
+    if light_mode != st.session_state.light_mode:
+
+        st.session_state.light_mode = light_mode
+        st.rerun()
+
+    st.divider()
 
     if st.button(
         "🚪 Logout",
@@ -1069,302 +1147,236 @@ with st.sidebar:
     ):
 
         st.logout()
+
+
 # =====================================
-# FRONT PAGE / PRESENTATION DASHBOARD
+# MAIN HOME DASHBOARD
 # =====================================
 
-if st.session_state.current_chat_id is None:
+st.markdown(
+    """
+    <div class="hero">
+        <div class="hero-tag">✦ YOUR PERSONAL AI ASSISTANT</div>
+        <h1>Welcome to <span>Nur's AI</span></h1>
+        <p>Your intelligent companion for creativity,
+        learning, productivity and everyday tasks.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-    st.markdown("""
-    <section class="showcase-hero">
-        <div class="showcase-copy">
-            <div class="showcase-eyebrow">
-                ✨ &nbsp; Welcome to Nur's AI Assistant
-            </div>
+st.markdown(
+    """
+    <div class="showcase-ready">
+        <h3>✨ Ready to explore something amazing?</h3>
+        <p>Ask anything, upload an image, or share your thoughts.
+        Your AI assistant is ready to help.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-            <h1>
-                Your Personal<br>
-                <span>AI Companion</span>
-            </h1>
+# Feature Cards
 
-            <p>
-                Ask questions, get instant answers, analyze images,
-                use voice chat, and explore new ideas. Your smart
-                assistant is ready to help you learn, create,
-                and get things done.
-            </p>
-        </div>
+col1, col2, col3 = st.columns(3)
 
-        <div class="showcase-robot" aria-label="AI robot">
-            🤖
-        </div>
-    </section>
-    """, unsafe_allow_html=True)
+with col1:
 
     st.markdown(
-        '<div class="showcase-section-title">'
-        '✨ &nbsp; What I Can Do For You'
-        '</div>',
+        """
+        <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <h4>Smart Chat</h4>
+            <p>Ask questions and get intelligent answers.</p>
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
-    feature_cols = st.columns(4, gap="medium")
+with col2:
 
-    feature_data = [
-        (
-            "💬",
-            "Text Chat",
-            "Ask anything and get helpful answers"
-        ),
-        (
-            "🖼️",
-            "Image Analysis",
-            "Understand and explore pictures"
-        ),
-        (
-            "🎙️",
-            "Voice Assistant",
-            "Speak naturally with your AI"
-        ),
-        (
-            "📄",
-            "File & Camera",
-            "Share images and capture photos"
-        ),
-    ]
-
-    for col, (icon, title, description) in zip(
-        feature_cols,
-        feature_data
-    ):
-
-        with col:
-
-            st.markdown(f"""
-            <div class="showcase-feature">
-                <div class="showcase-feature-icon">
-                    {icon}
-                </div>
-
-                <h3>{title}</h3>
-
-                <p>{description}</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <section class="showcase-ready">
-
-        <h3>
-            🚀 &nbsp; Ready to Get Started?
-        </h3>
-
-        <p>
-            Choose a feature from the sidebar, or type a message
-            below to begin your journey with Nur's AI Assistant.
-        </p>
-
-        <div class="showcase-points">
-            <span><b>●</b> Fast &amp; Helpful</span>
-            <span><b>●</b> Secure Chat</span>
-            <span><b>●</b> Always Here</span>
+    st.markdown(
+        """
+        <div class="feature-card">
+            <div class="feature-icon">🖼️</div>
+            <h4>Image Understanding</h4>
+            <p>Upload images and ask AI to analyze them.</p>
         </div>
-
-    </section>
-    """, unsafe_allow_html=True)
-
-else:
-
-    st.markdown("## ✨ Your Conversation")
-
-
-# =====================================
-# LOAD CURRENT CHAT MESSAGES
-# =====================================
-
-if st.session_state.current_chat_id:
-
-    try:
-
-        messages = get_messages(
-            user_id,
-            st.session_state.current_chat_id
-        )
-
-        for msg in messages:
-
-            if msg["role"] == "user":
-                avatar = "👤"
-            else:
-                avatar = "🤖"
-
-            with st.chat_message(
-                msg["role"],
-                avatar=avatar
-            ):
-
-                st.markdown(
-                    msg["content"]
-                )
-
-    except Exception as e:
-
-        st.error(
-            f"Could not load messages: {e}"
-        )
-
-
-# =====================================
-# FIXED BOTTOM CHAT INPUT WITH PLUS MENU
-# =====================================
-
-with st.container(key="fixed_chat_bar"):
-
-    plus_col, chat_col = st.columns(
-        [0.10, 0.90],
-        gap="small"
+        """,
+        unsafe_allow_html=True
     )
 
-    # =================================
-    # PLUS MENU
-    # =================================
+with col3:
 
-    with plus_col:
+    st.markdown(
+        """
+        <div class="feature-card">
+            <div class="feature-icon">🎙️</div>
+            <h4>Voice Input</h4>
+            <p>Speak naturally with your AI assistant.</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-        with st.popover(
-            "＋",
-            use_container_width=True
+
+# =====================================
+# CURRENT CHAT DISPLAY
+# =====================================
+
+chat_id = st.session_state.current_chat_id
+
+if chat_id:
+
+    messages = get_messages(
+        user_id,
+        chat_id
+    )
+
+    for message in messages:
+
+        role = message.get("role", "user")
+
+        avatar = (
+            "🤖"
+            if role == "assistant"
+            else "👤"
+        )
+
+        with st.chat_message(
+            role,
+            avatar=avatar
         ):
 
             st.markdown(
-                "### 📎 Attach to chat"
+                message.get("content", "")
             )
 
-            image_tab, camera_tab, voice_tab = st.tabs([
-                "🖼️ Image",
-                "📸 Camera",
-                "🎙️ Voice"
-            ])
 
-            # IMAGE UPLOAD
+# =====================================
+# BOTTOM COMPOSER
+# =====================================
 
-            with image_tab:
+if "image_widget_version" not in st.session_state:
+    st.session_state.image_widget_version = 0
 
-                uploaded_image = st.file_uploader(
-                    "Choose an image",
-                    type=[
-                        "png",
-                        "jpg",
-                        "jpeg",
-                        "webp"
-                    ],
-                    key="plus_image",
-                    help="For faster processing, use an image under 10 MB."
-                )
+if "audio_widget_version" not in st.session_state:
+    st.session_state.audio_widget_version = 0
 
-                image_question = st.text_input(
-                    "Ask about this image",
-                    key="plus_image_question"
-                )
 
-                if st.button(
-                    "Send Image",
-                    key="plus_send_image"
-                ):
+st.markdown(
+    """
+    <div class="composer-spacer"></div>
+    """,
+    unsafe_allow_html=True
+)
 
-                    if uploaded_image:
+# Composer icons row
 
-                        process_request(
-                            image_question,
-                            image_file=uploaded_image
-                        )
+icon_col1, icon_col2, text_col, send_col = st.columns(
+    [0.65, 0.65, 5.8, 0.9],
+    vertical_alignment="bottom"
+)
 
-                        st.rerun()
+uploaded_image = None
+recorded_audio = None
 
-                    else:
+with icon_col1:
 
-                        st.warning(
-                            "Please select an image."
-                        )
+    with st.popover(
+        "📎",
+        use_container_width=True
+    ):
 
-            # CAMERA
+        st.markdown("**Upload an image**")
 
-            with camera_tab:
-
-                camera_image = st.camera_input(
-                    "Take a picture",
-                    key="plus_camera"
-                )
-
-                camera_question = st.text_input(
-                    "Ask about this photo",
-                    key="plus_camera_question"
-                )
-
-                if st.button(
-                    "Send Photo",
-                    key="plus_send_camera"
-                ):
-
-                    if camera_image:
-
-                        process_request(
-                            camera_question,
-                            image_file=camera_image
-                        )
-
-                        st.rerun()
-
-                    else:
-
-                        st.warning(
-                            "Please take a picture."
-                        )
-
-            # VOICE RECORDING
-
-            with voice_tab:
-
-                recorded_audio = st.audio_input(
-                    "Record your voice",
-                    key="plus_voice"
-                )
-
-                if recorded_audio:
-                    st.audio(recorded_audio)
-
-                if st.button(
-                    "Send Voice",
-                    key="plus_send_voice"
-                ):
-
-                    if recorded_audio:
-
-                        process_request(
-                            "Please listen to my voice message and answer.",
-                            audio_file=recorded_audio
-                        )
-
-                        st.rerun()
-
-                    else:
-
-                        st.warning(
-                            "Please record your voice."
-                        )
-
-    # =================================
-    # NORMAL TEXT CHAT
-    # =================================
-
-    with chat_col:
-
-        prompt = st.chat_input(
-            "Message Nur's AI Assistant...",
-            key="main_chat_input"
+        uploaded_image = st.file_uploader(
+            "Choose image",
+            type=[
+                "png",
+                "jpg",
+                "jpeg",
+                "webp"
+            ],
+            key=f"image_upload_{st.session_state.image_widget_version}",
+            label_visibility="collapsed"
         )
 
-        if prompt:
+with icon_col2:
 
-            process_request(prompt)
-            st.rerun()
+    with st.popover(
+        "🎙️",
+        use_container_width=True
+    ):
+
+        st.markdown("**Voice message**")
+
+        if hasattr(st, "audio_input"):
+
+            recorded_audio = st.audio_input(
+                "Record your voice",
+                key=f"audio_input_{st.session_state.audio_widget_version}"
+            )
+
+        else:
+
+            st.warning(
+                "Voice recording requires a newer Streamlit version."
+            )
+
+
+# Text input and Send button
+
+with st.form(
+    "bottom_message_form",
+    clear_on_submit=True,
+    border=False
+):
+
+    text_col, send_col = st.columns(
+        [6, 1],
+        vertical_alignment="bottom"
+    )
+
+    with text_col:
+
+        user_prompt = st.text_input(
+            "Message Nur's AI",
+            placeholder="Message Nur's AI...",
+            label_visibility="collapsed"
+        )
+
+    with send_col:
+
+        send_clicked = st.form_submit_button(
+            "➤",
+            use_container_width=True
+        )
+
+
+# Process submitted message
+
+if send_clicked:
+
+    if (
+        user_prompt.strip()
+        or uploaded_image is not None
+        or recorded_audio is not None
+    ):
+
+        process_request(
+            prompt=user_prompt.strip(),
+            image_file=uploaded_image,
+            audio_file=recorded_audio
+        )
+
+        st.session_state.image_widget_version += 1
+        st.session_state.audio_widget_version += 1
+
+        st.rerun()
+
+    else:
+
+        st.warning(
+            "Please write a message or attach an image/voice message."
+        )
