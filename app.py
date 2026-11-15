@@ -1,4 +1,4 @@
-
+```python
 import streamlit as st
 from google import genai
 from google.genai import types
@@ -25,36 +25,62 @@ IMAGE_JPEG_QUALITY = 85
 STORAGE_BUCKET = "chat-images"
 
 # =====================================
-# ORIGINAL PURPLE-BLUE THEME
+# PURPLE-BLUE THEME
 # =====================================
 st.markdown("""
 <style>
-.stApp {
+
+/* Main application background */
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+.main {
     background: linear-gradient(
         135deg,
         #f7f8ff 0%,
         #eef0ff 55%,
         #f9f7ff 100%
-    );
-    color: #172044;
+    ) !important;
+    color: #172044 !important;
 }
 
+/* Main content */
+[data-testid="stMain"] .block-container {
+    background: transparent !important;
+}
+
+/* Header */
 header[data-testid="stHeader"] {
-    background: transparent;
+    background: transparent !important;
 }
 
-section[data-testid="stSidebar"] {
+/* Sidebar */
+section[data-testid="stSidebar"],
+section[data-testid="stSidebar"] > div {
     background: linear-gradient(
         180deg,
-        #171b36,
-        #10152b
-    );
+        #171b36 0%,
+        #10152b 100%
+    ) !important;
 }
 
 section[data-testid="stSidebar"] * {
-    color: #f4f5ff;
+    color: #f4f5ff !important;
 }
 
+/* Sidebar buttons */
+section[data-testid="stSidebar"] .stButton > button {
+    background: rgba(255,255,255,0.08) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+}
+
+section[data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(110,105,255,0.35) !important;
+    border-color: #9c8cff !important;
+}
+
+/* Hero section */
 .hero {
     padding: 34px 36px;
     border-radius: 24px;
@@ -63,14 +89,14 @@ section[data-testid="stSidebar"] * {
         #ffffff 0%,
         #f1efff 55%,
         #e8edff 100%
-    );
-    border: 1px solid #e1e4ff;
+    ) !important;
+    border: 1px solid #e1e4ff !important;
     margin: 10px 0 22px 0;
     box-shadow: 0 12px 35px rgba(53, 66, 150, .08);
 }
 
 .hero h1 {
-    color: #172044;
+    color: #172044 !important;
     font-size: clamp(30px, 4vw, 48px);
     margin: 4px 0 8px 0;
 }
@@ -82,14 +108,15 @@ section[data-testid="stSidebar"] * {
 }
 
 .hero p {
-    color: #64719c;
+    color: #64719c !important;
     font-size: 16px;
     margin-bottom: 0;
 }
 
+/* Feature cards */
 .feature-card {
-    background: rgba(255,255,255,.88);
-    border: 1px solid #e4e8ff;
+    background: rgba(255,255,255,.92) !important;
+    border: 1px solid #e4e8ff !important;
     border-radius: 18px;
     padding: 19px;
     min-height: 145px;
@@ -101,57 +128,98 @@ section[data-testid="stSidebar"] * {
 }
 
 .feature-title {
-    color: #18234b;
+    color: #18234b !important;
     font-weight: 750;
     margin-top: 8px;
 }
 
 .feature-desc {
-    color: #7480a7;
+    color: #7480a7 !important;
     font-size: 13px;
 }
 
-.stButton > button {
-    border-radius: 12px;
-    border: 1px solid #d9ddff;
-    background: linear-gradient(100deg, #5c67f2, #8050e8);
-    color: white;
+/* Main buttons */
+.stButton > button,
+.stFormSubmitButton > button {
+    border-radius: 12px !important;
+    border: 1px solid #d9ddff !important;
+    background: linear-gradient(
+        100deg,
+        #5c67f2,
+        #8050e8
+    ) !important;
+    color: #ffffff !important;
     font-weight: 650;
     min-height: 42px;
 }
 
-.stButton > button:hover {
-    border-color: #9c8cff;
-    color: white;
+.stButton > button:hover,
+.stFormSubmitButton > button:hover {
+    border-color: #9c8cff !important;
+    color: #ffffff !important;
+    background: linear-gradient(
+        100deg,
+        #4858ed,
+        #9148df
+    ) !important;
 }
 
+/* Inputs */
 .stTextInput input,
 .stTextArea textarea {
-    border-radius: 12px;
-    background: #ffffff;
-    color: #172044;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    color: #172044 !important;
 }
 
+/* Select boxes */
+.stSelectbox div[data-baseweb="select"] > div {
+    background: #ffffff !important;
+    color: #172044 !important;
+}
+
+/* Chat messages */
 div[data-testid="stChatMessage"] {
-    background: rgba(255,255,255,.92);
-    border: 1px solid #e3e7ff;
+    background: rgba(255,255,255,.94) !important;
+    border: 1px solid #e3e7ff !important;
     border-radius: 16px;
     padding: 14px;
 }
 
+/* File uploader */
 div[data-testid="stFileUploader"] {
-    background: rgba(255,255,255,.7);
+    background: rgba(255,255,255,.75) !important;
+    border: 1px solid #e4e8ff !important;
     border-radius: 14px;
 }
 
+/* Form */
+[data-testid="stForm"] {
+    background: rgba(255,255,255,.55) !important;
+    border: 1px solid #e4e8ff !important;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+/* Divider */
 hr {
-    border-color: #e1e5fa;
+    border-color: #e1e5fa !important;
+}
+
+/* Main text */
+[data-testid="stMain"] p,
+[data-testid="stMain"] label,
+[data-testid="stMain"] h1,
+[data-testid="stMain"] h2,
+[data-testid="stMain"] h3 {
+    color: #172044;
 }
 
 .small-note {
-    color: #7782a7;
+    color: #7782a7 !important;
     font-size: 13px;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -162,7 +230,6 @@ try:
     GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
 
-    # Use the server-side Secret key first.
     SUPABASE_KEY = (
         st.secrets.get("SUPABASE_SECRET_KEY")
         or st.secrets.get("SUPABASE_KEY")
@@ -413,13 +480,11 @@ def process_request(prompt, image_file=None):
                 )
             )
 
-            # Upload image to private Supabase Storage.
             image_path = upload_chat_image(
                 chat_id,
                 image_bytes
             )
 
-        # Save user message and image path.
         save_message(
             chat_id,
             "user",
@@ -505,7 +570,6 @@ with st.sidebar:
                     "🗑️ Delete this chat",
                     key=f"delete_chat_{chat_id}"
                 ):
-                    # Remove this chat's stored images.
                     try:
                         files = supabase.storage.from_(
                             STORAGE_BUCKET
@@ -680,3 +744,4 @@ if send:
         st.rerun()
     else:
         st.warning("Please enter a message or upload an image.")
+```
