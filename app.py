@@ -6,6 +6,7 @@ from supabase import create_client
 from datetime import datetime, timezone
 from gtts import gTTS
 from io import BytesIO
+from PIL import Image
 
 
 # =====================================
@@ -21,6 +22,12 @@ st.set_page_config(
 
 MODEL = "gemini-3.5-flash-lite"
 MAX_HISTORY_MESSAGES = 12
+MAX_IMAGE_SIDE = 1600
+IMAGE_JPEG_QUALITY = 85
+
+# Theme preference (Dark Mode is the default)
+if "light_mode" not in st.session_state:
+    st.session_state.light_mode = False
 
 
 # =====================================
@@ -167,8 +174,360 @@ section[data-testid="stMain"] .block-container {
 
 }
 
+
+/* =====================================
+   PRESENTATION-READY HOME DASHBOARD
+   ===================================== */
+
+.showcase-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 300px;
+    padding: 34px 38px;
+    margin: 8px 0 30px 0;
+    border-radius: 24px;
+    border: 1px solid #393c9b;
+    background: radial-gradient(circle at 78% 45%, rgba(85, 73, 255, .35), transparent 34%),
+                linear-gradient(115deg, #101b4b 0%, #17145a 55%, #123b91 100%);
+    box-shadow: 0 18px 45px rgba(20, 30, 100, .20);
+}
+
+.showcase-copy {
+    position: relative;
+    z-index: 2;
+    max-width: 680px;
+}
+
+.showcase-eyebrow {
+    display: inline-block;
+    padding: 7px 13px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(170, 180, 255, .35);
+    border-radius: 30px;
+    background: rgba(255,255,255,.08);
+    color: #e4e8ff;
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: .2px;
+}
+
+.showcase-hero h1 {
+    color: #fff !important;
+    font-size: clamp(30px, 4vw, 48px) !important;
+    line-height: 1.12;
+    margin: 0 0 15px 0;
+}
+
+.showcase-hero h1 span {
+    background: linear-gradient(90deg, #e6a7ff, #8abaff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.showcase-hero p {
+    color: #dce5ff !important;
+    font-size: 15px;
+    line-height: 1.75;
+    max-width: 620px;
+}
+
+.showcase-robot {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 220px;
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 112px;
+    background: radial-gradient(circle, rgba(100,160,255,.28), rgba(120,80,255,.08) 55%, transparent 70%);
+    filter: drop-shadow(0 0 26px rgba(95,145,255,.45));
+}
+
+.showcase-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 2px 0 15px 0;
+    font-size: 22px;
+    font-weight: 750;
+}
+
+.showcase-feature {
+    min-height: 150px;
+    padding: 20px 18px;
+    border-radius: 19px;
+    background: linear-gradient(145deg, #171b3d, #111a37);
+    border: 1px solid #343b78;
+    box-shadow: 0 8px 22px rgba(0,0,0,.12);
+}
+
+.showcase-feature-icon {
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    font-size: 23px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg,#6d4cff,#287eea);
+    box-shadow: 0 5px 16px rgba(75,90,230,.28);
+}
+
+.showcase-feature h3 {
+    color: #fff;
+    font-size: 16px;
+    margin: 0 0 5px 0;
+}
+
+.showcase-feature p {
+    color: #b8c5ee;
+    font-size: 13px;
+    margin: 0;
+}
+
+.showcase-ready {
+    margin: 28px 0 20px 0;
+    padding: 24px 26px;
+    border-radius: 21px;
+    border: 1px solid #393b9b;
+    background: radial-gradient(circle at 95% 50%, rgba(107,74,255,.24), transparent 30%), linear-gradient(110deg,#111b4b,#17145a 65%,#202078);
+}
+
+.showcase-ready h3 {
+    color: #fff;
+    margin: 0 0 9px 0;
+    font-size: 19px;
+}
+
+.showcase-ready p {
+    color: #d4ddff;
+    margin: 0;
+    line-height: 1.65;
+    font-size: 14px;
+}
+
+.showcase-points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 17px;
+    color: #e4eaff;
+    font-size: 12px;
+}
+
+.showcase-points span {
+    white-space: nowrap;
+}
+
+.showcase-points b {
+    color: #35d5b2;
+    margin-right: 5px;
+}
+
+
+/* RESPONSIVE DESIGN */
+
+@media (max-width: 760px) {
+    .showcase-hero {
+        min-height: 0;
+        padding: 25px 22px;
+    }
+
+    .showcase-robot {
+        flex-basis: 105px;
+        width: 105px;
+        height: 105px;
+        font-size: 68px;
+    }
+
+    .showcase-hero p {
+        font-size: 14px;
+    }
+
+    .showcase-feature {
+        min-height: 132px;
+        padding: 16px 13px;
+    }
+
+    .showcase-ready {
+        padding: 20px;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
+
+
+# Light Mode changes the full app theme; Dark Mode keeps the original design.
+
+if st.session_state.light_mode:
+
+    st.markdown("""
+    <style>
+
+    .stApp {
+        background: radial-gradient(circle at 10% 5%, #eef0ff 0%, transparent 38%),
+                    linear-gradient(135deg, #f8faff 0%, #f1f5ff 55%, #f7f3ff 100%);
+        color: #14264f;
+    }
+
+    header[data-testid="stHeader"] {
+        background: rgba(248,250,255,0.82);
+    }
+
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f4f6ff, #edf2ff);
+        border-right: 1px solid #d8e2ff;
+    }
+
+    section[data-testid="stSidebar"] * {
+        color: #172b5b;
+    }
+
+    .hero {
+        background: linear-gradient(120deg, #e6ddff, #dceaff 58%, #d8e8ff);
+        border: 1px solid #c9d7ff;
+        box-shadow: 0 8px 26px rgba(70, 94, 170, 0.10);
+    }
+
+    .hero h1 {
+        color: #172b67;
+    }
+
+    .hero p {
+        color: #334d89;
+    }
+
+    .feature-card {
+        background: linear-gradient(145deg, #ffffff, #f2f6ff);
+        border: 1px solid #dce5ff;
+        box-shadow: 0 5px 18px rgba(60, 85, 150, 0.06);
+    }
+
+    .feature-title {
+        color: #172b5b;
+    }
+
+    .feature-desc {
+        color: #6174a5;
+    }
+
+    div[data-testid="stChatMessage"] {
+        background: rgba(255,255,255,0.88);
+        border: 1px solid #dce5ff;
+        color: #172b5b;
+        box-shadow: 0 4px 14px rgba(60, 85, 150, 0.05);
+    }
+
+    div[data-testid="stChatMessage"] p,
+    div[data-testid="stChatMessage"] li,
+    div[data-testid="stChatMessage"] span {
+        color: #172b5b;
+    }
+
+    .stTextInput input,
+    .stTextArea textarea {
+        background: #ffffff !important;
+        color: #172b5b !important;
+        border: 1px solid #d4def8 !important;
+    }
+
+    [data-testid="stChatInput"] textarea {
+        background: #ffffff !important;
+        color: #172b5b !important;
+    }
+
+    [data-testid="stChatInput"] {
+        background: #ffffff !important;
+        border-color: #d4def8 !important;
+    }
+
+    .st-key-fixed_chat_bar {
+        background: rgba(255,255,255,0.96);
+        border: 1px solid #dce5ff;
+        box-shadow: 0 8px 28px rgba(55, 75, 135, 0.13);
+    }
+
+    [data-testid="stPopover"] > button,
+    [data-testid="stTabs"] button {
+        color: #243b75;
+    }
+
+    hr {
+        border-color: #d8e2ff;
+    }
+
+    .showcase-hero {
+        background: radial-gradient(circle at 80% 45%, rgba(130,145,255,.24), transparent 34%),
+                    linear-gradient(115deg, #e5e8ff 0%, #e9e6ff 52%, #dcecff 100%);
+        border: 1px solid #cbd7ff;
+        box-shadow: 0 18px 42px rgba(85,105,180,.13);
+    }
+
+    .showcase-eyebrow {
+        background: rgba(255,255,255,.72);
+        border-color: #d4dcff;
+        color: #3d4d91;
+    }
+
+    .showcase-hero h1 {
+        color: #142b68 !important;
+    }
+
+    .showcase-hero h1 span {
+        background: linear-gradient(90deg,#8b43dc,#3478e8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .showcase-hero p {
+        color: #344e8b !important;
+    }
+
+    .showcase-robot {
+        filter: drop-shadow(0 0 22px rgba(92,130,255,.22));
+    }
+
+    .showcase-feature {
+        background: linear-gradient(145deg,#ffffff,#f1f5ff);
+        border-color: #dce5ff;
+        box-shadow: 0 8px 22px rgba(65,90,155,.07);
+    }
+
+    .showcase-feature h3 {
+        color: #172e68;
+    }
+
+    .showcase-feature p {
+        color: #6075a8;
+    }
+
+    .showcase-ready {
+        background: radial-gradient(circle at 95% 50%,rgba(150,125,255,.16),transparent 30%),linear-gradient(110deg,#e5edff,#f1eaff 65%,#e5eaff);
+        border-color: #d2dcff;
+    }
+
+    .showcase-ready h3 {
+        color: #172e68;
+    }
+
+    .showcase-ready p,
+    .showcase-points {
+        color: #425b96;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
 
 
 # =====================================
@@ -205,8 +564,6 @@ except Exception as e:
 
     st.error(f"Connection error: {e}")
     st.stop()
-
-
 # =====================================
 # LOGIN
 # =====================================
@@ -268,13 +625,30 @@ if "voice_reply" not in st.session_state:
 # DATABASE HELPERS
 # =====================================
 
-def get_chats():
+@st.cache_data(ttl=30, show_spinner=False)
+def get_chats(uid):
 
     result = (
         supabase.table("chats")
         .select("*")
-        .eq("user_id", user_id)
+        .eq("user_id", uid)
         .order("updated_at", desc=True)
+        .limit(50)
+        .execute()
+    )
+
+    return result.data or []
+
+
+@st.cache_data(ttl=15, show_spinner=False)
+def get_messages(uid, chat_id):
+
+    result = (
+        supabase.table("chat_messages")
+        .select("*")
+        .eq("user_id", uid)
+        .eq("chat_id", chat_id)
+        .order("created_at")
         .execute()
     )
 
@@ -283,39 +657,27 @@ def get_chats():
 
 def create_new_chat(title="New Chat"):
 
+    now = datetime.now(
+        timezone.utc
+    ).isoformat()
+
     result = (
         supabase.table("chats")
         .insert({
             "user_id": user_id,
             "title": title,
-            "created_at": datetime.now(
-                timezone.utc
-            ).isoformat(),
-            "updated_at": datetime.now(
-                timezone.utc
-            ).isoformat()
+            "created_at": now,
+            "updated_at": now
         })
         .execute()
     )
+
+    get_chats.clear()
 
     if result.data:
         return result.data[0]["id"]
 
     return None
-
-
-def get_messages(chat_id):
-
-    result = (
-        supabase.table("chat_messages")
-        .select("*")
-        .eq("user_id", user_id)
-        .eq("chat_id", chat_id)
-        .order("created_at")
-        .execute()
-    )
-
-    return result.data or []
 
 
 def save_message(chat_id, role, content):
@@ -330,6 +692,8 @@ def save_message(chat_id, role, content):
         ).isoformat()
     }).execute()
 
+    get_messages.clear()
+
 
 def update_chat_time(chat_id):
 
@@ -342,6 +706,41 @@ def update_chat_time(chat_id):
     ).eq(
         "user_id", user_id
     ).execute()
+
+    get_chats.clear()
+
+
+# =====================================
+# IMAGE OPTIMIZATION
+# =====================================
+
+def optimize_image(image_file):
+
+    image_file.seek(0)
+
+    image = Image.open(image_file)
+
+    if image.mode not in ("RGB", "L"):
+        image = image.convert("RGB")
+    elif image.mode == "L":
+        image = image.convert("RGB")
+
+    image.thumbnail(
+        (MAX_IMAGE_SIDE, MAX_IMAGE_SIDE)
+    )
+
+    output = BytesIO()
+
+    image.save(
+        output,
+        format="JPEG",
+        quality=IMAGE_JPEG_QUALITY,
+        optimize=True
+    )
+
+    output.seek(0)
+
+    return output.getvalue()
 
 
 # =====================================
@@ -377,7 +776,10 @@ def process_request(
 
     try:
 
-        previous_messages = get_messages(chat_id)
+        previous_messages = get_messages(
+            user_id,
+            chat_id
+        )
 
         contents = []
 
@@ -402,16 +804,18 @@ def process_request(
             types.Part.from_text(text=prompt)
         ]
 
-        # Image attachment
+        # Optimized image attachment
 
         if image_file is not None:
 
-            image_bytes = image_file.getvalue()
+            image_bytes = optimize_image(
+                image_file
+            )
 
             current_parts.append(
                 types.Part.from_bytes(
                     data=image_bytes,
-                    mime_type=image_file.type or "image/jpeg"
+                    mime_type="image/jpeg"
                 )
             )
 
@@ -581,7 +985,7 @@ with st.sidebar:
 
     try:
 
-        chats = get_chats()
+        chats = get_chats(user_id)
 
         for chat in chats:
 
@@ -626,6 +1030,7 @@ with st.sidebar:
                     .execute()
                 )
 
+                get_chats.clear()
                 st.session_state.current_chat_id = None
                 st.rerun()
 
@@ -643,6 +1048,12 @@ with st.sidebar:
         "### ⚙️ Settings"
     )
 
+    st.toggle(
+        "☀️ Light Mode",
+        key="light_mode",
+        help="Turn on to use the full light theme. Turn off to return to the original dark theme."
+    )
+
     st.session_state.voice_reply = st.toggle(
         "🔊 AI Voice Reply",
         value=st.session_state.voice_reply
@@ -658,77 +1069,113 @@ with st.sidebar:
     ):
 
         st.logout()
-
-
 # =====================================
-# FRONT PAGE
-# =====================================
-
-st.markdown("""
-<div class="hero">
-    <h1>🤖 Nur's AI Assistant</h1>
-    <p>Welcome back! Your intelligent assistant is ready.</p>
-    <p>Ask questions • Speak naturally • Upload images • Explore ideas</p>
-</div>
-""", unsafe_allow_html=True)
-
-
-# =====================================
-# FEATURE CARDS
+# FRONT PAGE / PRESENTATION DASHBOARD
 # =====================================
 
 if st.session_state.current_chat_id is None:
 
-    col1, col2, col3, col4 = st.columns(4)
+    st.markdown("""
+    <section class="showcase-hero">
+        <div class="showcase-copy">
+            <div class="showcase-eyebrow">
+                ✨ &nbsp; Welcome to Nur's AI Assistant
+            </div>
 
-    with col1:
+            <h1>
+                Your Personal<br>
+                <span>AI Companion</span>
+            </h1>
 
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">💬</div>
-            <div class="feature-title">AI CHAT</div>
-            <div class="feature-desc">Ask anything</div>
+            <p>
+                Ask questions, get instant answers, analyze images,
+                use voice chat, and explore new ideas. Your smart
+                assistant is ready to help you learn, create,
+                and get things done.
+            </p>
         </div>
-        """, unsafe_allow_html=True)
 
-    with col2:
-
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">🎙️</div>
-            <div class="feature-title">VOICE CHAT</div>
-            <div class="feature-desc">Speak to your AI</div>
+        <div class="showcase-robot" aria-label="AI robot">
+            🤖
         </div>
-        """, unsafe_allow_html=True)
+    </section>
+    """, unsafe_allow_html=True)
 
-    with col3:
+    st.markdown(
+        '<div class="showcase-section-title">'
+        '✨ &nbsp; What I Can Do For You'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">🖼️</div>
-            <div class="feature-title">IMAGE UPLOAD</div>
-            <div class="feature-desc">Understand pictures</div>
+    feature_cols = st.columns(4, gap="medium")
+
+    feature_data = [
+        (
+            "💬",
+            "Text Chat",
+            "Ask anything and get helpful answers"
+        ),
+        (
+            "🖼️",
+            "Image Analysis",
+            "Understand and explore pictures"
+        ),
+        (
+            "🎙️",
+            "Voice Assistant",
+            "Speak naturally with your AI"
+        ),
+        (
+            "📄",
+            "File & Camera",
+            "Share images and capture photos"
+        ),
+    ]
+
+    for col, (icon, title, description) in zip(
+        feature_cols,
+        feature_data
+    ):
+
+        with col:
+
+            st.markdown(f"""
+            <div class="showcase-feature">
+                <div class="showcase-feature-icon">
+                    {icon}
+                </div>
+
+                <h3>{title}</h3>
+
+                <p>{description}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <section class="showcase-ready">
+
+        <h3>
+            🚀 &nbsp; Ready to Get Started?
+        </h3>
+
+        <p>
+            Choose a feature from the sidebar, or type a message
+            below to begin your journey with Nur's AI Assistant.
+        </p>
+
+        <div class="showcase-points">
+            <span><b>●</b> Fast &amp; Helpful</span>
+            <span><b>●</b> Secure Chat</span>
+            <span><b>●</b> Always Here</span>
         </div>
-        """, unsafe_allow_html=True)
 
-    with col4:
+    </section>
+    """, unsafe_allow_html=True)
 
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">📸</div>
-            <div class="feature-title">CAMERA</div>
-            <div class="feature-desc">Capture and ask</div>
-        </div>
-        """, unsafe_allow_html=True)
+else:
 
-
-# =====================================
-# YOUR CONVERSATION
-# =====================================
-
-st.markdown(
-    "## ✨ Your Conversation"
-)
+    st.markdown("## ✨ Your Conversation")
 
 
 # =====================================
@@ -740,6 +1187,7 @@ if st.session_state.current_chat_id:
     try:
 
         messages = get_messages(
+            user_id,
             st.session_state.current_chat_id
         )
 
@@ -810,7 +1258,8 @@ with st.container(key="fixed_chat_bar"):
                         "jpeg",
                         "webp"
                     ],
-                    key="plus_image"
+                    key="plus_image",
+                    help="For faster processing, use an image under 10 MB."
                 )
 
                 image_question = st.text_input(
